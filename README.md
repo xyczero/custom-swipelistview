@@ -1,4 +1,4 @@
-Android-ListViewWithSwipeAndPullToRefresh
+Android-ListViewWithSwipe
 =========================================
 
 Temporarily not added.
