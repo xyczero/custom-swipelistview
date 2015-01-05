@@ -15,7 +15,8 @@ import android.widget.Scroller;
 import com.xyczero.customlistview.R;
 
 public class CustomSwipeListView extends ListView {
-	private final String TAG = "com.xyczeo.CustomSwipeListView";
+	private static final String TAG = "com.xyczeo.customswipelistview";
+	public static final String ITEMSWIPE_LAYOUT_TAG = "com.xyczeo.customswipelistview.itemswipelayout";
 
 	private enum SwipeDirection {
 		NONE, RIGHT, LEFT;
@@ -34,7 +35,13 @@ public class CustomSwipeListView extends ListView {
 
 	private View mItemSwipeView;
 
+	private View mOldItemMainView;
+
+	private View mOldItemSwipeView;
+
 	private Rect mTouchFrame;
+
+	private boolean isItemSwipeViewVisible;
 
 	private boolean isClickItemSwipeView;
 
@@ -75,6 +82,8 @@ public class CustomSwipeListView extends ListView {
 		mMaximumVelocity = configuration.getScaledMaximumFlingVelocity();
 		mMinimumVelocity = (int) (MIN_VELOCITY * density);
 		mScroller = new Scroller(context);
+		getLastVisiblePosition();
+		getCount();
 	}
 
 	@Override
@@ -95,26 +104,31 @@ public class CustomSwipeListView extends ListView {
 						.findViewById(R.id.doc_layout);
 				mItemSwipeView = getChildAt(
 						mSelectedPosition - getFirstVisiblePosition())
-						.findViewWithTag("com.xyc.customswipe.layout");
-				if (isInSwipePosition((int) mDownMotionX, (int) mDownMotionY)) {
-					isClickItemSwipeView = true;
-				} else {
-					isClickItemSwipeView = false;
-				}
+						.findViewWithTag(ITEMSWIPE_LAYOUT_TAG);
+				isClickItemSwipeView = isInSwipePosition((int) mDownMotionX,
+						(int) mDownMotionY);
 			}
+
 			Log.d(TAG, "onInterceptTouchEvent:ACTION_DOWN" + "--"
 					+ isClickItemSwipeView);
 			break;
 		case MotionEvent.ACTION_UP:
-			if (mItemSwipeView.isShown() && isClickItemSwipeView) {
+			if (isClickItemSwipeView) {
 				mItemSwipeView.setVisibility(GONE);
 				mItemMainView.scrollTo(0, 0);
+				isItemSwipeViewVisible = false;
 			}
+			// 若ACTION_UP为isClickItemSwipeView=true,则isItemSwipeViewVisible=false;
+			// 若ACTION_UP为isClickItemSwipeView=false,则保证isItemSwipeViewVisible=false;
+
 			recycleVelocityTracker();
+			Log.d(TAG, "onInterceptTouchEvent:ACTION_UP" + "--"
+					+ isClickItemSwipeView);
+			break;
 		case MotionEvent.ACTION_CANCEL:
 			recycleVelocityTracker();
-			Log.d(TAG, "onInterceptTouchEvent:ACTION_UP OR ACTION_CANCEL"
-					+ "--" + isClickItemSwipeView);
+			Log.d(TAG, "onInterceptTouchEvent:ACTION_CANCEL" + "--"
+					+ isClickItemSwipeView);
 			break;
 		default:
 			return false;
@@ -134,6 +148,16 @@ public class CustomSwipeListView extends ListView {
 			case MotionEvent.ACTION_DOWN:
 				Log.d(TAG, "onTouchEvent:ACTION_DOWN");
 				obtainVelocityTracker(ev);
+				if (isItemSwipeViewVisible) {
+					if (!isClickItemSwipeView && mOldItemMainView != null
+							&& mOldItemSwipeView != null) {
+						mOldItemSwipeView.setVisibility(GONE);
+						mOldItemMainView.scrollTo(0, 0);
+					}
+					isItemSwipeViewVisible = false;
+					ev.setAction(MotionEvent.ACTION_CANCEL);
+					return super.onTouchEvent(ev);
+				}
 				break;
 			case MotionEvent.ACTION_MOVE:
 				Log.d(TAG, "onTouchEvent:ACTION_MOVE");
@@ -200,6 +224,9 @@ public class CustomSwipeListView extends ListView {
 					// }
 					isSwiping = false;
 					mItemSwipeView.setVisibility(VISIBLE);
+					isItemSwipeViewVisible = true;
+					mOldItemMainView = mItemMainView;
+					mOldItemSwipeView = mItemSwipeView;
 					// itemView.scrollTo(0, 0);
 					// mRemoveListener.removeItem(removeDirection,
 					// slidePosition);
@@ -215,10 +242,12 @@ public class CustomSwipeListView extends ListView {
 			mTouchFrame = new Rect();
 			frame = mTouchFrame;
 		}
-		if (mItemSwipeView.getVisibility() == View.VISIBLE) {
-			frame.set(mItemSwipeView.getLeft(), getChildAt(mSelectedPosition)
-					.getTop(), mItemSwipeView.getRight(),
-					getChildAt(mSelectedPosition).getBottom());
+		if (isItemSwipeViewVisible) {
+			frame.set(mItemSwipeView.getLeft(),
+					getChildAt(mSelectedPosition - getFirstVisiblePosition())
+							.getTop(), mItemSwipeView.getRight(),
+					getChildAt(mSelectedPosition - getFirstVisiblePosition())
+							.getBottom());
 			if (frame.contains(x, y)) {
 				return true;
 			}
@@ -286,6 +315,7 @@ public class CustomSwipeListView extends ListView {
 			// 滚回到原始位置,为了偷下懒这里是直接调用scrollTo滚动
 			mItemMainView.scrollTo(0, 0);
 			mItemSwipeView.setVisibility(GONE);
+			isItemSwipeViewVisible = false;
 		}
 	}
 }
