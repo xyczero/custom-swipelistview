@@ -57,6 +57,10 @@ public class CustomSwipeListView extends ListView {
 
 	private int mScreenWidth;
 
+	private RemoveItemCustomSwipeListener mRemoveItemCustomSwipeListener;
+
+	private boolean mEnableSiwpeItemRight = true;
+
 	public CustomSwipeListView(Context context) {
 		super(context);
 		initCustomSwipeListView();
@@ -118,9 +122,6 @@ public class CustomSwipeListView extends ListView {
 				mItemMainView.scrollTo(0, 0);
 				isItemSwipeViewVisible = false;
 			}
-			// 若ACTION_UP为isClickItemSwipeView=true,则isItemSwipeViewVisible=false;
-			// 若ACTION_UP为isClickItemSwipeView=false,则保证isItemSwipeViewVisible=false;
-
 			recycleVelocityTracker();
 			Log.d(TAG, "onInterceptTouchEvent:ACTION_UP" + "--"
 					+ isClickItemSwipeView);
@@ -177,7 +178,7 @@ public class CustomSwipeListView extends ListView {
 				if (isSwiping) {
 					final int velocityX = getScrollXVelocity();
 					if (velocityX > mMinimumVelocity) {
-						// scrollBySwipeDirection(SwipeDirection.RIGHT);
+						scrollBySwipeDirection(SwipeDirection.RIGHT);
 					} else if (velocityX < -mMinimumVelocity) {
 						scrollBySwipeDirection(SwipeDirection.LEFT);
 					} else {
@@ -188,13 +189,9 @@ public class CustomSwipeListView extends ListView {
 					if (mScroller.isFinished()) {
 						isSwiping = false;
 					}
-				} else {
-					// else if (Math.abs(ev.getX() - mDownMotionX) < 10
-					// && Math.abs(ev.getY() - mDownMotionY) < 10
-					// && mSelectedPosition != AdapterView.INVALID_POSITION) {
-					// mListViewListener
-					// .onPullListViewItemClickListener(slidePosition);
-					// }
+					// 防止因横向滑动过慢或距离过小导致出发OnItemClick事件
+					ev.setAction(MotionEvent.ACTION_CANCEL);
+					return super.onTouchEvent(ev);
 				}
 				break;
 			default:
@@ -209,27 +206,31 @@ public class CustomSwipeListView extends ListView {
 
 		if (isSwiping && mSelectedPosition != INVALID_POSITION) {
 			if (mScroller.computeScrollOffset()) {
-				// 让ListView item根据当前的滚动偏移量进行滚动
 				mItemMainView.scrollTo(mScroller.getCurrX(),
 						mScroller.getCurrY());
 
 				postInvalidate();
-
-				// 滚动动画结束的时候调用回调接口
-				if (mScroller.isFinished()
-						&& mSwipeDirection != SwipeDirection.RIGHT) {
-					// if (mRemoveListener == null) {
-					// throw new NullPointerException(
-					// "RemoveListener is null, we should called setRemoveListener()");
-					// }
-					isSwiping = false;
-					mItemSwipeView.setVisibility(VISIBLE);
-					isItemSwipeViewVisible = true;
-					mOldItemMainView = mItemMainView;
-					mOldItemSwipeView = mItemSwipeView;
-					// itemView.scrollTo(0, 0);
-					// mRemoveListener.removeItem(removeDirection,
-					// slidePosition);
+				if (mScroller.isFinished()) {
+					switch (mSwipeDirection) {
+					case LEFT:
+						isSwiping = false;
+						mItemSwipeView.setVisibility(VISIBLE);
+						isItemSwipeViewVisible = true;
+						mOldItemMainView = mItemMainView;
+						mOldItemSwipeView = mItemSwipeView;
+						break;
+					case RIGHT:
+						if (mRemoveItemCustomSwipeListener == null) {
+							throw new NullPointerException(
+									"RemoveItemCustomSwipeListener is null, we should called setRemoveItemCustomSwipeListener()");
+						}
+						mItemMainView.scrollTo(0, 0);
+						mRemoveItemCustomSwipeListener
+								.onRemoveItem(mSelectedPosition);
+						break;
+					default:
+						break;
+					}
 				}
 			}
 		}
@@ -276,9 +277,11 @@ public class CustomSwipeListView extends ListView {
 	}
 
 	private void scrollBySwipeDirection(SwipeDirection direction) {
+		mSwipeDirection = direction;
 		switch (direction) {
 		case RIGHT:
-			scrollToRight();
+			if (mEnableSiwpeItemRight)
+				scrollToRight();
 			break;
 		case LEFT:
 			scrollToLeft();
@@ -308,14 +311,27 @@ public class CustomSwipeListView extends ListView {
 	private void smoothScrollTo() {
 		// 如果向左滚动的距离大于屏幕的三分之一，就让其删除
 		if (mItemMainView.getScrollX() >= mScreenWidth / 3) {
-			scrollToLeft();
+			scrollBySwipeDirection(SwipeDirection.LEFT);
 		} else if (mItemMainView.getScrollX() <= -mScreenWidth / 3) {
-			scrollToRight();
+			scrollBySwipeDirection(SwipeDirection.RIGHT);
 		} else {
 			// 滚回到原始位置,为了偷下懒这里是直接调用scrollTo滚动
 			mItemMainView.scrollTo(0, 0);
 			mItemSwipeView.setVisibility(GONE);
 			isItemSwipeViewVisible = false;
 		}
+	}
+
+	public void setSiwpeItemRightEnable(boolean enable) {
+		mEnableSiwpeItemRight = enable;
+	}
+
+	public void setRemoveItemCustomSwipeListener(
+			RemoveItemCustomSwipeListener removeItemCustomSwipeListener) {
+		mRemoveItemCustomSwipeListener = removeItemCustomSwipeListener;
+	}
+
+	public interface RemoveItemCustomSwipeListener {
+		void onRemoveItem(int selectedPostion);
 	}
 }

@@ -15,10 +15,10 @@ public abstract class CustomSwipeBaseAdapter extends BaseAdapter {
         mContext = context;
     }
 
-    public abstract void bindItemView(View parentView, Context context,
+    protected abstract void bindItemView(View parentView, Context context,
             int position);
 
-    public abstract void bindSwipeLeftView(View parentView, Context context,
+    protected abstract void bindSwipeLeftView(View parentView, Context context,
             int position);
 
     private void bindView(View parentView, Context context, int position) {
@@ -26,10 +26,10 @@ public abstract class CustomSwipeBaseAdapter extends BaseAdapter {
         bindSwipeLeftView(parentView, context, position);
     }
 
-    public abstract View newItemView(Context context, int position,
+    protected abstract View newItemView(Context context, int position,
             ViewGroup parent);
 
-    public abstract View newSwipeView(Context context, int position,
+    protected abstract View newSwipeView(Context context, int position,
             ViewGroup parent);
 
     private View newView(Context context, int position, ViewGroup parent) {
