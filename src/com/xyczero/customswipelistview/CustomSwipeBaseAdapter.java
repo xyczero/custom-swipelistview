@@ -1,5 +1,8 @@
 package com.xyczero.customswipelistview;
 
+import java.util.ArrayList;
+import java.util.List;
+
 import android.content.Context;
 import android.view.Gravity;
 import android.view.View;
@@ -8,11 +11,33 @@ import android.view.ViewGroup.LayoutParams;
 import android.widget.BaseAdapter;
 import android.widget.RelativeLayout;
 
-public abstract class CustomSwipeBaseAdapter extends BaseAdapter {
-    private Context mContext;
+public abstract class CustomSwipeBaseAdapter<T> extends BaseAdapter implements
+        OnUndoActionListener {
+    private static final int INVALID_POSITION = -1;
+    protected Context mContext;
+    private T mObject;
+    private List<T> mObjects = new ArrayList<T>();
+    private int mHasDeletedPosition;
 
     public CustomSwipeBaseAdapter(Context context) {
         mContext = context;
+    }
+
+    public void removeItemByPosition(int position) {
+        if (position < mObjects.size() && position != INVALID_POSITION) {
+            mObject = mObjects.remove(position);
+            mHasDeletedPosition = position;
+        } else
+            throw new IndexOutOfBoundsException("The position is invalid!");
+    }
+
+    protected void setAdapterData(List<T> objects) {
+        mObjects = objects;
+        mHasDeletedPosition = INVALID_POSITION;
+    }
+
+    protected List<T> getAdapterData() {
+        return mObjects;
     }
 
     protected abstract void bindItemView(View parentView, Context context,
@@ -71,5 +96,20 @@ public abstract class CustomSwipeBaseAdapter extends BaseAdapter {
         }
         bindView(v, mContext, position);
         return v;
+    }
+
+    @Override
+    public void noExecuteUndoAction() {
+        mObject = null;
+        mHasDeletedPosition = INVALID_POSITION;
+    }
+
+    @Override
+    public void executeUndoAction() {
+        if (mHasDeletedPosition <= mObjects.size()
+                && mHasDeletedPosition != INVALID_POSITION)
+            mObjects.add(mHasDeletedPosition, mObject);
+        mHasDeletedPosition = INVALID_POSITION;
+        notifyDataSetChanged();
     }
 }
