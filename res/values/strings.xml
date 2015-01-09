@@ -5,4 +5,7 @@
     <string name="hello_world">Hello world!</string>
     <string name="action_settings">Settings</string>
 
+    <!-- undoDialog -->
+    <string name="undodialog_undo_action_str">撤销</string>
+
 </resources>

@@ -29,8 +29,8 @@
     </style>
 
     <style name="dialog_inout_anim" parent="android:Animation">
-        <item name="@android:windowEnterAnimation">@anim/dialog_enter</item>
-        <item name="@android:windowExitAnimation">@anim/dialog_exit</item>
+        <item name="@android:windowEnterAnimation">@anim/undodialog_enter</item>
+        <item name="@android:windowExitAnimation">@anim/undodialog_exit</item>
     </style>
 
 </resources>
