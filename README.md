@@ -3,7 +3,7 @@ Android-ListViewWithSwipe
 ##TODO-LIST:
 >1.~~修复第一次滑动时触法Iitem点击事件的bug~~
 
->2.左滑距离动态化，以itemswipe的宽度为准
+>2.~~左滑距离动态化，以itemswipe的宽度为准~~
  
 >3.~~Listview中只允许出现一个swipe事件~~
  
