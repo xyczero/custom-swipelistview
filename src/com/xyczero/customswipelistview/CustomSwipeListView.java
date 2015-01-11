@@ -1,3 +1,19 @@
+/*
+ *  COPYRIGHT NOTICE  
+ *  Copyright (C) 2015, xyczero <xiayuncheng1991@gmail.com>
+ *  
+ *  	http://www.xyczero.com/
+ *   
+ *  @license under the Apache License, Version 2.0 
+ *
+ *  @file    CustomSwipeListView.java
+ *  @brief   Custom Swipe ListView
+ *  
+ *  @version 1.0     
+ *  @author  xyczero
+ *  @date    2015/01/12    
+ */
+
 package com.xyczero.customswipelistview;
 
 import android.content.Context;
@@ -16,25 +32,33 @@ import com.xyczero.customlistview.R;
 
 /**
  * 
- * @author xyczero
+ * A view that shows items in a vertically scrolling list. The items come from
+ * the {@link CustomSwipeBaseAdapter} associated with this view.
  * 
- *         welcome to www.xyczero.com
+ * @author xyczero
  * 
  */
 public class CustomSwipeListView extends ListView {
 	private static final String TAG = "com.xyczeo.customswipelistview";
-	public static final String ITEMSWIPE_LAYOUT_TAG = "com.xyczeo.customswipelistview.itemswipelayout";
 
-	private final int MIN_VELOCITY = 500;// dip per second
+	/**
+	 * Indicates the tag of the adapter's swipeLeftView.
+	 */
+	public static final String ITEMSWIPE_LAYOUT_TAG = "com.xyczeo.customswipelistview.swipeleftlayout";
 
-	private final int TOUCH_SIWPE_RIGHT = 1;
-	private final int TOUCH_SIWPE_LEFT = 2;
-	private final int TOUCH_SIWPE_AUTO = 3;
-	private final int TOUCH_SIWPE_NONE = 4;
+	/**
+	 * The unit is dip per second.
+	 */
+	private final int MIN_VELOCITY = 2000;
+
+	private final int TOUCH_SWIPE_RIGHT = 1;
+	private final int TOUCH_SWIPE_LEFT = 2;
+	private final int TOUCH_SWIPE_AUTO = 3;
+	private final int TOUCH_SWIPE_NONE = 4;
 
 	private final int MINIMUM_SWIPEITEM_TRIGGER_DELTAX = 5;
 
-	private int mTouchSwipeMode = TOUCH_SIWPE_NONE;
+	private int mTouchSwipeMode = TOUCH_SWIPE_NONE;
 
 	private Scroller mScroller;
 
@@ -72,11 +96,11 @@ public class CustomSwipeListView extends ListView {
 	private int mAnimationLeftDuration = DEFAULT_DURATION;
 	private int mAnimationRightDuration = DEFAULT_DURATION;
 
-	private boolean mEnableSiwpeItemRight = true;
+	private boolean mEnableSwipeItemRight = true;
 
-	private boolean mEnableSiwpeItemLeft = true;
+	private boolean mEnableSwipeItemLeft = true;
 
-	private int mSiwpeItemLeftTriggerDeltaX;
+	private int mSwipeItemLeftTriggerDeltaX;
 
 	private int mSwipeItemRightTriggerDeltaX;
 
@@ -101,17 +125,17 @@ public class CustomSwipeListView extends ListView {
 		final Context context = getContext();
 		final ViewConfiguration configuration = ViewConfiguration.get(context);
 
-		mTouchSlop = ViewConfiguration.get(context).getScaledTouchSlop();
+		mTouchSlop = ViewConfiguration.get(context).getScaledTouchSlop() * 5;
 		mMaximumVelocity = configuration.getScaledMaximumFlingVelocity();
-		mMinimumVelocity = CustomSwipeUtils.convertDiptoPixel(context,
-				MIN_VELOCITY);
+		mMinimumVelocity = CustomSwipeUtils
+				.convertDptoPx(context, MIN_VELOCITY);
 		mScreenWidth = CustomSwipeUtils.getScreenWidth(context);
 		mScroller = new Scroller(context);
-		initSiwpeItemTriggerDeltaX();
+		initSwipeItemTriggerDeltaX();
 	}
 
-	private void initSiwpeItemTriggerDeltaX() {
-		mSiwpeItemLeftTriggerDeltaX = mScreenWidth / 3;
+	private void initSwipeItemTriggerDeltaX() {
+		mSwipeItemLeftTriggerDeltaX = mScreenWidth / 3;
 		mSwipeItemRightTriggerDeltaX = -mScreenWidth / 3;
 	}
 
@@ -133,7 +157,7 @@ public class CustomSwipeListView extends ListView {
 			mSelectedPosition = pointToPosition((int) mDownMotionX,
 					(int) mDownMotionY);
 			Log.d(TAG, "selectedPosition:" + mSelectedPosition);
-			if (mSelectedPosition != INVALID_POSITION) {
+			if (mSelectedPosition != INVALID_POSITION && mScroller.isFinished()) {
 				mItemMainView = getChildAt(
 						mSelectedPosition - getFirstVisiblePosition())
 						.findViewById(R.id.doc_layout);
@@ -151,6 +175,8 @@ public class CustomSwipeListView extends ListView {
 			if (isClickItemSwipeView) {
 				mItemSwipeView.setVisibility(GONE);
 				mItemMainView.scrollTo(0, 0);
+				mOldItemMainView = null;
+				mOldItemSwipeView = null;
 				isItemSwipeViewVisible = false;
 			}
 			recycleVelocityTracker();
@@ -177,18 +203,13 @@ public class CustomSwipeListView extends ListView {
 			return super.onTouchEvent(ev);
 		}
 
-		if (!mScroller.isFinished()) {
-			return false;
-		}
-
 		if (mSelectedPosition != INVALID_POSITION) {
 			addVelocityTrackerMotionEvent(ev);
 			switch (action) {
 			case MotionEvent.ACTION_DOWN:
 				Log.d(TAG, "onTouchEvent:ACTION_DOWN");
 				if (isItemSwipeViewVisible) {
-					if (!isClickItemSwipeView && mOldItemMainView != null
-							&& mOldItemSwipeView != null) {
+					if (!isClickItemSwipeView) {
 						mOldItemSwipeView.setVisibility(GONE);
 						mOldItemMainView.scrollTo(0, 0);
 					}
@@ -199,6 +220,7 @@ public class CustomSwipeListView extends ListView {
 				break;
 			case MotionEvent.ACTION_MOVE:
 				Log.d(TAG, "onTouchEvent:ACTION_MOVE");
+				mVelocityTracker.getYVelocity();
 				if (Math.abs(getScrollXVelocity()) > mMinimumVelocity
 						|| (Math.abs(ev.getX() - mDownMotionX) > mTouchSlop && Math
 								.abs(ev.getY() - mDownMotionY) < mTouchSlop)) {
@@ -206,8 +228,8 @@ public class CustomSwipeListView extends ListView {
 				}
 				if (isSwiping) {
 					int deltaX = (int) mDownMotionX - x;
-					if (deltaX > 0 && mEnableSiwpeItemLeft || deltaX < 0
-							&& mEnableSiwpeItemRight) {
+					if (deltaX > 0 && mEnableSwipeItemLeft || deltaX < 0
+							&& mEnableSwipeItemRight) {
 						mDownMotionX = x;
 						mItemMainView.scrollBy(deltaX, 0);
 					}
@@ -218,14 +240,16 @@ public class CustomSwipeListView extends ListView {
 			case MotionEvent.ACTION_UP:
 				Log.d(TAG, "onTouchEvent:ACTION_UP");
 				if (isSwiping) {
+					mOldItemMainView = mItemMainView;
+					mOldItemSwipeView = mItemSwipeView;
 					final int velocityX = getScrollXVelocity();
 					if (velocityX > mMinimumVelocity) {
-						scrollByTouchSwipeMode(TOUCH_SIWPE_RIGHT, -mScreenWidth);
+						scrollByTouchSwipeMode(TOUCH_SWIPE_RIGHT, -mScreenWidth);
 					} else if (velocityX < -mMinimumVelocity) {
-						scrollByTouchSwipeMode(TOUCH_SIWPE_LEFT,
+						scrollByTouchSwipeMode(TOUCH_SWIPE_LEFT,
 								getItemSwipeViewWidth(mItemSwipeView));
 					} else {
-						scrollByTouchSwipeMode(TOUCH_SIWPE_AUTO,
+						scrollByTouchSwipeMode(TOUCH_SWIPE_AUTO,
 								Integer.MIN_VALUE);
 					}
 
@@ -257,19 +281,16 @@ public class CustomSwipeListView extends ListView {
 				if (mScroller.isFinished()) {
 					isSwiping = false;
 					switch (mTouchSwipeMode) {
-					case TOUCH_SIWPE_LEFT:
-						mItemSwipeView.setVisibility(VISIBLE);
+					case TOUCH_SWIPE_LEFT:
+						mOldItemSwipeView.setVisibility(VISIBLE);
 						isItemSwipeViewVisible = true;
-						mOldItemMainView = mItemMainView;
-						mOldItemSwipeView = mItemSwipeView;
 						break;
-					case TOUCH_SIWPE_RIGHT:
+					case TOUCH_SWIPE_RIGHT:
 						if (mRemoveItemCustomSwipeListener == null) {
 							throw new NullPointerException(
 									"RemoveItemCustomSwipeListener is null, we should called setRemoveItemCustomSwipeListener()");
 						}
-
-						mItemMainView.scrollTo(0, 0);
+						mOldItemMainView.scrollTo(0, 0);
 						mRemoveItemCustomSwipeListener
 								.onRemoveItemListener(mSelectedPosition);
 						break;
@@ -321,15 +342,15 @@ public class CustomSwipeListView extends ListView {
 		return velocity;
 	}
 
-	private void scrollByTouchSwipeMode(int touchSiwpeMode, int targetDelta) {
-		mTouchSwipeMode = touchSiwpeMode;
-		switch (touchSiwpeMode) {
-		case TOUCH_SIWPE_RIGHT:
+	private void scrollByTouchSwipeMode(int touchSwipeMode, int targetDelta) {
+		mTouchSwipeMode = touchSwipeMode;
+		switch (touchSwipeMode) {
+		case TOUCH_SWIPE_RIGHT:
 			scrollByTartgetDelta(targetDelta, mAnimationRightDuration);
-		case TOUCH_SIWPE_LEFT:
+		case TOUCH_SWIPE_LEFT:
 			scrollByTartgetDelta(targetDelta, mAnimationLeftDuration);
 			break;
-		case TOUCH_SIWPE_AUTO:
+		case TOUCH_SWIPE_AUTO:
 			scrollByAuto();
 			break;
 		default:
@@ -348,11 +369,11 @@ public class CustomSwipeListView extends ListView {
 
 	private void scrollByAuto() {
 		final int itemMainScrollX = mItemMainView.getScrollX();
-		if (itemMainScrollX >= mSiwpeItemLeftTriggerDeltaX) {
-			scrollByTouchSwipeMode(TOUCH_SIWPE_LEFT,
+		if (itemMainScrollX >= mSwipeItemLeftTriggerDeltaX) {
+			scrollByTouchSwipeMode(TOUCH_SWIPE_LEFT,
 					getItemSwipeViewWidth(mItemSwipeView));
 		} else if (itemMainScrollX <= mSwipeItemRightTriggerDeltaX) {
-			scrollByTouchSwipeMode(TOUCH_SIWPE_RIGHT, -mScreenWidth);
+			scrollByTouchSwipeMode(TOUCH_SWIPE_RIGHT, -mScreenWidth);
 		} else {
 			// 滚回到原始位置,为了偷下懒这里是直接调用scrollTo滚动
 			mItemMainView.scrollTo(0, 0);
@@ -369,37 +390,37 @@ public class CustomSwipeListView extends ListView {
 		mAnimationLeftDuration = duration;
 	}
 
-	public void setSiwpeItemLeftEnable(boolean enable) {
-		mEnableSiwpeItemLeft = enable;
+	public void setSwipeItemLeftEnable(boolean enable) {
+		mEnableSwipeItemLeft = enable;
 	}
 
-	public void setSiwpeItemRightEnable(boolean enable) {
-		mEnableSiwpeItemRight = enable;
+	public void setSwipeItemRightEnable(boolean enable) {
+		mEnableSwipeItemRight = enable;
 	}
 
 	public void setSwipeItemRightTriggerDeltaX(int dipDeltaX) {
 		if (dipDeltaX < MINIMUM_SWIPEITEM_TRIGGER_DELTAX)
 			return;
-		final int pxDeltaX = CustomSwipeUtils.convertDiptoPixel(getContext(),
+		final int pxDeltaX = CustomSwipeUtils.convertDptoPx(getContext(),
 				dipDeltaX);
-		setSwipeItemTriggerDeltaX(TOUCH_SIWPE_RIGHT, pxDeltaX);
+		setSwipeItemTriggerDeltaX(TOUCH_SWIPE_RIGHT, pxDeltaX);
 	}
 
 	public void setSwipeItemLeftTriggerDeltaX(int dipDeltaX) {
 		if (dipDeltaX < MINIMUM_SWIPEITEM_TRIGGER_DELTAX)
 			return;
-		final int pxDeltaX = CustomSwipeUtils.convertDiptoPixel(getContext(),
+		final int pxDeltaX = CustomSwipeUtils.convertDptoPx(getContext(),
 				dipDeltaX);
-		setSwipeItemTriggerDeltaX(TOUCH_SIWPE_LEFT, pxDeltaX);
+		setSwipeItemTriggerDeltaX(TOUCH_SWIPE_LEFT, pxDeltaX);
 	}
 
 	private void setSwipeItemTriggerDeltaX(int touchMode, int pxDeltaX) {
 		switch (touchMode) {
-		case TOUCH_SIWPE_RIGHT:
+		case TOUCH_SWIPE_RIGHT:
 			mSwipeItemRightTriggerDeltaX = pxDeltaX <= mScreenWidth ? -pxDeltaX
 					: mScreenWidth;
 			break;
-		case TOUCH_SIWPE_LEFT:
+		case TOUCH_SWIPE_LEFT:
 			mSwipeItemRightTriggerDeltaX = pxDeltaX <= mScreenWidth ? pxDeltaX
 					: mScreenWidth;
 			break;

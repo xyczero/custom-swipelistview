@@ -7,7 +7,7 @@ Android-ListViewWithSwipe
  
 >3.~~Listview中只允许出现一个swipe事件~~
  
->4.规范代码，增加注释
+>4.规范代码，增加注释(65%)
  
 >5.添加左滑时菜单显示的过渡效果
  

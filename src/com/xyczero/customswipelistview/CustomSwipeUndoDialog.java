@@ -1,3 +1,18 @@
+/*
+ *  COPYRIGHT NOTICE  
+ *  Copyright (C) 2015, xyczero <xiayuncheng1991@gmail.com>
+ *  
+ *  	http://www.xyczero.com/
+ *   
+ *  @license under the Apache License, Version 2.0 
+ *
+ *  @file    CustomSwipeUndoDialog.java
+ *  @brief   Custom Swipe Undo Dialog
+ *  
+ *  @version 1.0     
+ *  @author  xyczero
+ *  @date    2015/01/12    
+ */
 package com.xyczero.customswipelistview;
 
 import android.app.Dialog;
@@ -11,13 +26,6 @@ import android.widget.TextView;
 
 import com.xyczero.customlistview.R;
 
-/**
- * 
- * @author xyczero
- * 
- *         welcome to www.xyczero.com
- * 
- */
 public class CustomSwipeUndoDialog {
 	private OnUndoActionListener mUndoActionListener;
 	private UndoDialog mUndoDialog;
@@ -68,7 +76,7 @@ public class CustomSwipeUndoDialog {
 			getWindow().setWindowAnimations(R.style.dialog_inout_anim);
 			WindowManager.LayoutParams p = this.getWindow().getAttributes();
 			p.width = (int) (CustomSwipeUtils.getScreenWidth(context) - 2 * CustomSwipeUtils
-					.convertDiptoPixel(context, LAYOUT_MARGIN_SIDES));
+					.convertDptoPx(context, LAYOUT_MARGIN_SIDES));
 			getWindow().setAttributes(p);
 			initView();
 		}
