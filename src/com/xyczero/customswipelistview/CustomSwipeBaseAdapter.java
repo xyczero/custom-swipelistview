@@ -63,7 +63,7 @@ public abstract class CustomSwipeBaseAdapter<T> extends BaseAdapter implements
 	 * Contains the list of objects that represent the data of the adapter which
 	 * is extended the CustomSwipeBaseAdapter.
 	 */
-	private List<T> mObjects = new ArrayList<T>();
+	private List<T> mObjects;
 
 	/**
 	 * Records the position that the object has been deleted.
@@ -84,6 +84,7 @@ public abstract class CustomSwipeBaseAdapter<T> extends BaseAdapter implements
 	 */
 	public CustomSwipeBaseAdapter(Context context) {
 		mContext = context;
+		mObjects = new ArrayList<T>();
 	}
 
 	/**

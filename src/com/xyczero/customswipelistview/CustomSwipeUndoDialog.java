@@ -26,11 +26,28 @@ import android.widget.TextView;
 
 import com.xyczero.customlistview.R;
 
+/**
+ * Control the initialization,showing and closing of an inner class UndoDialog.
+ * 
+ * @author xyczero
+ * 
+ */
 public class CustomSwipeUndoDialog {
-	private OnUndoActionListener mUndoActionListener;
-	private UndoDialog mUndoDialog;
+
 	private Context mContext;
+
+	/**
+	 * The message will been shown in the dialog.
+	 */
 	private String mMessage;
+
+	private UndoDialog mUndoDialog;
+
+	/**
+	 * The listener that receives notifications when the mUndoBtn has been
+	 * clicked or the dialog is dismissed.
+	 */
+	private OnUndoActionListener mUndoActionListener;
 
 	public CustomSwipeUndoDialog(Context context) {
 		mContext = context;
@@ -49,22 +66,53 @@ public class CustomSwipeUndoDialog {
 		}
 	}
 
+	/**
+	 * set the message that will been shown in the dialog.
+	 * 
+	 * @param textId
+	 *            resource id of the string
+	 * @return
+	 */
 	public CustomSwipeUndoDialog setMessage(int textId) {
 		mMessage = mContext.getResources().getString(textId);
 		return this;
 	}
 
+	/**
+	 * same as {@link #setMessage(int)}
+	 * 
+	 * @param textString
+	 *            message string
+	 * @return
+	 */
 	public CustomSwipeUndoDialog setMessage(String textString) {
 		mMessage = textString;
 		return this;
 	}
 
+	/**
+	 * Register a callback to be invoked when the mUndoBtn has been clicked or
+	 * the dialog is dismissed.
+	 * 
+	 * @param undoActionListener
+	 */
 	public void setUndoActionListener(OnUndoActionListener undoActionListener) {
 		mUndoActionListener = undoActionListener;
 	}
 
+	/**
+	 * A custom dialog inner class. Used to show some custom message by
+	 * executing the removing action.
+	 * 
+	 * @author xyczero
+	 * 
+	 */
 	private class UndoDialog extends Dialog implements OnClickListener {
-		private static final int LAYOUT_MARGIN_SIDES = 10;// dip
+
+		/**
+		 * The length of the distance on both sides in dip.
+		 */
+		private static final int LAYOUT_MARGIN_SIDES = 10;
 
 		private Button mUndoBtn;
 		private TextView mUndoMessage;
@@ -74,10 +122,14 @@ public class CustomSwipeUndoDialog {
 			setContentView(R.layout.undodialog);
 			getWindow().setGravity(Gravity.BOTTOM);
 			getWindow().setWindowAnimations(R.style.dialog_inout_anim);
+
+			// TODO:To be optimized provide custom interface.
+			// Custom the location and size of the dialog.
 			WindowManager.LayoutParams p = this.getWindow().getAttributes();
 			p.width = (int) (CustomSwipeUtils.getScreenWidth(context) - 2 * CustomSwipeUtils
 					.convertDptoPx(context, LAYOUT_MARGIN_SIDES));
 			getWindow().setAttributes(p);
+
 			initView();
 		}
 
@@ -92,6 +144,10 @@ public class CustomSwipeUndoDialog {
 			show();
 		}
 
+		/**
+		 * If {@link #mUndoActionListener} is not null ,it will perform
+		 * noExecuteUndoAction() before calling dismiss().
+		 */
 		@Override
 		public void dismiss() {
 			if (mUndoActionListener != null) {

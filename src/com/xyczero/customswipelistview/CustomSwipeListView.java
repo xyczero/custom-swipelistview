@@ -49,61 +49,129 @@ public class CustomSwipeListView extends ListView {
 	/**
 	 * The unit is dip per second.
 	 */
-	private final int MIN_VELOCITY = 2000;
+	private static final int MIN_VELOCITY = 2000;
 
-	private final int TOUCH_SWIPE_RIGHT = 1;
-	private final int TOUCH_SWIPE_LEFT = 2;
-	private final int TOUCH_SWIPE_AUTO = 3;
-	private final int TOUCH_SWIPE_NONE = 4;
+	private static final int MINIMUM_SWIPEITEM_TRIGGER_DELTAX = 5;
 
-	private final int MINIMUM_SWIPEITEM_TRIGGER_DELTAX = 5;
+	/**
+	 * Touch mode of swipe.
+	 */
+	private static final int TOUCH_SWIPE_RIGHT = 1;
+	private static final int TOUCH_SWIPE_LEFT = 2;
+	private static final int TOUCH_SWIPE_AUTO = 3;
+	private static final int TOUCH_SWIPE_NONE = 4;
 
-	private int mTouchSwipeMode = TOUCH_SWIPE_NONE;
+	/**
+	 * Current touch mode of swipe;
+	 */
+	private int mCurTouchSwipeMode;
+
+	/**
+	 * Rectangle used for hit testing children.
+	 */
+	private Rect mTouchFrame;
 
 	private Scroller mScroller;
+
+	private int mScreenWidth;
+
+	private int mTouchSlop;
 
 	private VelocityTracker mVelocityTracker;
 	private int mMinimumVelocity;
 	private int mMaximumVelocity;
 
-	private View mItemMainView;
-
-	private View mItemSwipeView;
-
-	private View mOldItemMainView;
-
-	private View mOldItemSwipeView;
-
-	private Rect mTouchFrame;
-
-	private boolean isItemSwipeViewVisible;
-
-	private boolean isClickItemSwipeView;
-
-	private boolean isSwiping;
-
-	private int mTouchSlop;
-
-	private int mSelectedPosition = INVALID_POSITION;
-
-	private float mDownMotionX;
-
-	private float mDownMotionY;
-
-	private int mScreenWidth;
-
-	private final int DEFAULT_DURATION = 250;
+	/**
+	 * Control the animation execution time.
+	 */
+	private final static int DEFAULT_DURATION = 250;
 	private int mAnimationLeftDuration = DEFAULT_DURATION;
 	private int mAnimationRightDuration = DEFAULT_DURATION;
 
+	/**
+	 * The view that is shown in front of the listview by the position which the
+	 * finger point to currently; It indicates a general item view of the
+	 * listview;
+	 */
+	private View mCurItemMainView;
+
+	/**
+	 * The view that is currently hidden in behind of {@link #mCurItemMainView}
+	 * by the position which the finger point to currently .It indicates a view
+	 * which might been shown when in the mode of {@link #TOUCH_SWIPE_LEFT} ;
+	 */
+	private View mCurItemSwipeView;
+
+	/**
+	 * Same as {@link #mCurItemMainView} except that it was the last position
+	 * which the finger pointed to;
+	 */
+	private View mLastItemMainView;
+
+	/**
+	 * Same as {@link #mCurItemSwipeView} except that it was the last position
+	 * which the finger pointed to;
+	 */
+	private View mLastItemSwipeView;
+
+	/**
+	 * True if {@link #mLastItemSwipeView} is visible.
+	 */
+	private boolean isItemSwipeViewVisible;
+
+	/**
+	 * True if clicking the position of {@link #mCurItemSwipeView}. Indicates
+	 * whether the listview will intercept the distribution of the touch event;
+	 */
+	private boolean isClickItemSwipeView;
+
+	/**
+	 * True if triggering the swipe touch mode. Indicates whether trigger the
+	 * swipe touch mode.
+	 */
+	private boolean isSwiping;
+
+	/**
+	 * Used to track the position that has been pointed to.
+	 */
+	private int mSelectedPosition;
+
+	/**
+	 * Used to track the X coordinate when the first finger down to.
+	 */
+	private float mDownMotionX;
+
+	/**
+	 * Used to track the Y coordinate when the first finger down to.
+	 */
+	private float mDownMotionY;
+
+	/**
+	 * Control whether enable the {@link #TOUCH_SWIPE_RIGHT}.
+	 */
 	private boolean mEnableSwipeItemRight = true;
 
+	/**
+	 * Control whether enable the {@link #TOUCH_SWIPE_LEFT}.
+	 */
 	private boolean mEnableSwipeItemLeft = true;
 
+	/**
+	 * the minimum delta in x coordinate that whether triggers the
+	 * {@link #TOUCH_SWIPE_LEFT}.
+	 */
 	private int mSwipeItemLeftTriggerDeltaX;
 
+	/**
+	 * the minimum delta in x coordinate that whether triggers the
+	 * {@link #TOUCH_SWIPE_RIGHT}.
+	 */
 	private int mSwipeItemRightTriggerDeltaX;
 
+	/**
+	 * The listener that receives notifications when an item is removed in
+	 * {@link #TOUCH_SWIPE_RIGHT}.
+	 */
 	private RemoveItemCustomSwipeListener mRemoveItemCustomSwipeListener;
 
 	public CustomSwipeListView(Context context) {
@@ -127,11 +195,16 @@ public class CustomSwipeListView extends ListView {
 
 		mTouchSlop = ViewConfiguration.get(context).getScaledTouchSlop() * 5;
 		mMaximumVelocity = configuration.getScaledMaximumFlingVelocity();
+		// set minimum velocity according to the MIN_VELOCITY.
 		mMinimumVelocity = CustomSwipeUtils
 				.convertDptoPx(context, MIN_VELOCITY);
 		mScreenWidth = CustomSwipeUtils.getScreenWidth(context);
 		mScroller = new Scroller(context);
 		initSwipeItemTriggerDeltaX();
+
+		// set default value.
+		mCurTouchSwipeMode = TOUCH_SWIPE_NONE;
+		mSelectedPosition = INVALID_POSITION;
 	}
 
 	private void initSwipeItemTriggerDeltaX() {
@@ -141,13 +214,14 @@ public class CustomSwipeListView extends ListView {
 
 	private int getItemSwipeViewWidth(View itemSwipeView) {
 		if (itemSwipeView != null)
-			return mItemSwipeView.getLayoutParams().width;
+			return mCurItemSwipeView.getLayoutParams().width;
 		else
 			return Integer.MAX_VALUE;
 	}
 
 	@Override
 	public boolean onInterceptTouchEvent(MotionEvent ev) {
+		// just response single finger action.
 		final int action = ev.getAction() & MotionEventCompat.ACTION_MASK;
 		switch (action) {
 		case MotionEvent.ACTION_DOWN:
@@ -157,11 +231,14 @@ public class CustomSwipeListView extends ListView {
 			mSelectedPosition = pointToPosition((int) mDownMotionX,
 					(int) mDownMotionY);
 			Log.d(TAG, "selectedPosition:" + mSelectedPosition);
+			// If responsing to down action before the scroll has been
+			// finished or in invalid position,it will lead to chaos of
+			// itemswipeview.
 			if (mSelectedPosition != INVALID_POSITION && mScroller.isFinished()) {
-				mItemMainView = getChildAt(
+				mCurItemMainView = getChildAt(
 						mSelectedPosition - getFirstVisiblePosition())
 						.findViewById(R.id.doc_layout);
-				mItemSwipeView = getChildAt(
+				mCurItemSwipeView = getChildAt(
 						mSelectedPosition - getFirstVisiblePosition())
 						.findViewWithTag(ITEMSWIPE_LAYOUT_TAG);
 				isClickItemSwipeView = isInSwipePosition((int) mDownMotionX,
@@ -172,11 +249,12 @@ public class CustomSwipeListView extends ListView {
 					+ isClickItemSwipeView);
 			break;
 		case MotionEvent.ACTION_UP:
+			// clear data and give initial value
 			if (isClickItemSwipeView) {
-				mItemSwipeView.setVisibility(GONE);
-				mItemMainView.scrollTo(0, 0);
-				mOldItemMainView = null;
-				mOldItemSwipeView = null;
+				mCurItemSwipeView.setVisibility(GONE);
+				mCurItemMainView.scrollTo(0, 0);
+				mLastItemMainView = null;
+				mLastItemSwipeView = null;
 				isItemSwipeViewVisible = false;
 			}
 			recycleVelocityTracker();
@@ -191,13 +269,17 @@ public class CustomSwipeListView extends ListView {
 		default:
 			return false;
 		}
+		// Return true and don't intercept the touch event if clicking the
+		// itemswipeview.
 		return !isClickItemSwipeView;
 	}
 
 	@Override
 	public boolean onTouchEvent(MotionEvent ev) {
+		// Just response single finger action.
 		final int action = ev.getAction() & MotionEvent.ACTION_MASK;
 		final int x = (int) ev.getX();
+
 		if (action == MotionEvent.ACTION_DOWN && ev.getEdgeFlags() != 0) {
 			ev.setAction(MotionEvent.ACTION_CANCEL);
 			return super.onTouchEvent(ev);
@@ -208,10 +290,13 @@ public class CustomSwipeListView extends ListView {
 			switch (action) {
 			case MotionEvent.ACTION_DOWN:
 				Log.d(TAG, "onTouchEvent:ACTION_DOWN");
+				// If there is a itemswipeview and then don't click it
+				// by the next down action,it will first return to original
+				// state and cancel to response the following actions.
 				if (isItemSwipeViewVisible) {
 					if (!isClickItemSwipeView) {
-						mOldItemSwipeView.setVisibility(GONE);
-						mOldItemMainView.scrollTo(0, 0);
+						mLastItemSwipeView.setVisibility(GONE);
+						mLastItemMainView.scrollTo(0, 0);
 					}
 					isItemSwipeViewVisible = false;
 					ev.setAction(MotionEvent.ACTION_CANCEL);
@@ -221,6 +306,7 @@ public class CustomSwipeListView extends ListView {
 			case MotionEvent.ACTION_MOVE:
 				Log.d(TAG, "onTouchEvent:ACTION_MOVE");
 				mVelocityTracker.getYVelocity();
+				// determine whether the swipe action.
 				if (Math.abs(getScrollXVelocity()) > mMinimumVelocity
 						|| (Math.abs(ev.getX() - mDownMotionX) > mTouchSlop && Math
 								.abs(ev.getY() - mDownMotionY) < mTouchSlop)) {
@@ -231,34 +317,40 @@ public class CustomSwipeListView extends ListView {
 					if (deltaX > 0 && mEnableSwipeItemLeft || deltaX < 0
 							&& mEnableSwipeItemRight) {
 						mDownMotionX = x;
-						mItemMainView.scrollBy(deltaX, 0);
+						mCurItemMainView.scrollBy(deltaX, 0);
 					}
-					// 如果默认调用super.onTouchEvent(),可能会导致在滑动过程中Item失焦。
+					// if super.onTouchEvent() that been called there,it might
+					// lead to the specified item out of focus due to the
+					// function might call itemClick function in the sliding.
 					return true;
 				}
 				break;
 			case MotionEvent.ACTION_UP:
 				Log.d(TAG, "onTouchEvent:ACTION_UP");
 				if (isSwiping) {
-					mOldItemMainView = mItemMainView;
-					mOldItemSwipeView = mItemSwipeView;
+					mLastItemMainView = mCurItemMainView;
+					mLastItemSwipeView = mCurItemSwipeView;
 					final int velocityX = getScrollXVelocity();
 					if (velocityX > mMinimumVelocity) {
 						scrollByTouchSwipeMode(TOUCH_SWIPE_RIGHT, -mScreenWidth);
 					} else if (velocityX < -mMinimumVelocity) {
 						scrollByTouchSwipeMode(TOUCH_SWIPE_LEFT,
-								getItemSwipeViewWidth(mItemSwipeView));
+								getItemSwipeViewWidth(mLastItemSwipeView));
 					} else {
 						scrollByTouchSwipeMode(TOUCH_SWIPE_AUTO,
 								Integer.MIN_VALUE);
 					}
 
 					recycleVelocityTracker();
-					// 此处添加是因为scrollTo(0,0)没有走computeScroll，所以要附加一下
+					// TODO:To be optimized for not calling computeScroll
+					// function.
 					if (mScroller.isFinished()) {
 						isSwiping = false;
 					}
-					// 防止因横向滑动过慢或距离过小导致出发OnItemClick事件
+
+					// prevent to trigger OnItemClick by transverse sliding
+					// distance too slow or too small OnItemClick events when in
+					// swipe mode.
 					ev.setAction(MotionEvent.ACTION_CANCEL);
 					return super.onTouchEvent(ev);
 				}
@@ -274,15 +366,16 @@ public class CustomSwipeListView extends ListView {
 	public void computeScroll() {
 		if (isSwiping && mSelectedPosition != INVALID_POSITION) {
 			if (mScroller.computeScrollOffset()) {
-				mItemMainView.scrollTo(mScroller.getCurrX(),
+				mLastItemMainView.scrollTo(mScroller.getCurrX(),
 						mScroller.getCurrY());
 				postInvalidate();
 
 				if (mScroller.isFinished()) {
 					isSwiping = false;
-					switch (mTouchSwipeMode) {
+					switch (mCurTouchSwipeMode) {
 					case TOUCH_SWIPE_LEFT:
-						mOldItemSwipeView.setVisibility(VISIBLE);
+						// show itemswipeview
+						mLastItemSwipeView.setVisibility(VISIBLE);
 						isItemSwipeViewVisible = true;
 						break;
 					case TOUCH_SWIPE_RIGHT:
@@ -290,7 +383,11 @@ public class CustomSwipeListView extends ListView {
 							throw new NullPointerException(
 									"RemoveItemCustomSwipeListener is null, we should called setRemoveItemCustomSwipeListener()");
 						}
-						mOldItemMainView.scrollTo(0, 0);
+						// Before the view in the selected position is
+						// deleted,it needs to return to original state because
+						// the next position will be setted in this position.
+						mLastItemMainView.scrollTo(0, 0);
+						// Callback
 						mRemoveItemCustomSwipeListener
 								.onRemoveItemListener(mSelectedPosition);
 						break;
@@ -303,16 +400,26 @@ public class CustomSwipeListView extends ListView {
 		super.computeScroll();
 	}
 
+	/**
+	 * True if clicking in the itemswipeview position.
+	 * 
+	 * @param x
+	 *            the x coordinate which gets in the down action
+	 * @param y
+	 *            the y coordinate which gets in the down action
+	 * @return
+	 */
 	private boolean isInSwipePosition(int x, int y) {
 		Rect frame = mTouchFrame;
 		if (frame == null) {
 			mTouchFrame = new Rect();
 			frame = mTouchFrame;
 		}
+		// The premise is that the itemswipeview is visible.
 		if (isItemSwipeViewVisible) {
-			frame.set(mItemSwipeView.getLeft(),
+			frame.set(mCurItemSwipeView.getLeft(),
 					getChildAt(mSelectedPosition - getFirstVisiblePosition())
-							.getTop(), mItemSwipeView.getRight(),
+							.getTop(), mCurItemSwipeView.getRight(),
 					getChildAt(mSelectedPosition - getFirstVisiblePosition())
 							.getBottom());
 			if (frame.contains(x, y)) {
@@ -336,14 +443,27 @@ public class CustomSwipeListView extends ListView {
 		}
 	}
 
+	/**
+	 * Get the velocity in the direction of x coordinate per second.
+	 * 
+	 * @return
+	 */
 	private int getScrollXVelocity() {
 		mVelocityTracker.computeCurrentVelocity(1000, mMaximumVelocity);
 		int velocity = (int) mVelocityTracker.getXVelocity();
 		return velocity;
 	}
 
+	/**
+	 * 
+	 * @param touchSwipeMode
+	 *            the swipe mode{@link #mCurTouchSwipeMode}
+	 * @param targetDelta
+	 *            The target delta in the direction of x coordinate that will be
+	 *            sliding by ignoring the delta that has been sliding.
+	 */
 	private void scrollByTouchSwipeMode(int touchSwipeMode, int targetDelta) {
-		mTouchSwipeMode = touchSwipeMode;
+		mCurTouchSwipeMode = touchSwipeMode;
 		switch (touchSwipeMode) {
 		case TOUCH_SWIPE_RIGHT:
 			scrollByTartgetDelta(targetDelta, mAnimationRightDuration);
@@ -358,34 +478,61 @@ public class CustomSwipeListView extends ListView {
 		}
 	}
 
+	/**
+	 * Calculate the actual delta in the direction of x coordinate by taking the
+	 * delta that has been sliding into consideration.
+	 * 
+	 * @param targetDelta
+	 *            The target delta in the direction of x coordinate that will be
+	 *            sliding by ignoring the delta that has been sliding.
+	 * @param animationDuration
+	 *            Animation execution time.
+	 */
 	private void scrollByTartgetDelta(final int targetDelta,
 			int animationDuration) {
-		final int itemMainScrollX = mItemMainView.getScrollX();
+		final int itemMainScrollX = mLastItemMainView.getScrollX();
 		final int actualDelta = (targetDelta - itemMainScrollX);
 		mScroller.startScroll(itemMainScrollX, 0, actualDelta, 0,
 				animationDuration);
 		postInvalidate();
 	}
 
+	/**
+	 * Determine whether meet the trigger condition according to the delta that
+	 * has been sliding when the x velocity doesn't meet the trigger condition.
+	 */
 	private void scrollByAuto() {
-		final int itemMainScrollX = mItemMainView.getScrollX();
+		final int itemMainScrollX = mLastItemMainView.getScrollX();
 		if (itemMainScrollX >= mSwipeItemLeftTriggerDeltaX) {
 			scrollByTouchSwipeMode(TOUCH_SWIPE_LEFT,
-					getItemSwipeViewWidth(mItemSwipeView));
+					getItemSwipeViewWidth(mLastItemSwipeView));
 		} else if (itemMainScrollX <= mSwipeItemRightTriggerDeltaX) {
 			scrollByTouchSwipeMode(TOUCH_SWIPE_RIGHT, -mScreenWidth);
 		} else {
-			// 滚回到原始位置,为了偷下懒这里是直接调用scrollTo滚动
-			mItemMainView.scrollTo(0, 0);
-			mItemSwipeView.setVisibility(GONE);
+			// Return to original state due to not meet the conditions.
+			// TODO:To be optimized for not calling computeScroll function.
+			mLastItemMainView.scrollTo(0, 0);
+			mLastItemSwipeView.setVisibility(GONE);
 			isItemSwipeViewVisible = false;
 		}
 	}
 
+	/**
+	 * set the animation time in swiping left
+	 * 
+	 * @param duration
+	 *            millisecond
+	 */
 	public void setAnimationLeftDuration(int duration) {
 		mAnimationRightDuration = duration;
 	}
 
+	/**
+	 * set the animation time in swiping right
+	 * 
+	 * @param duration
+	 *            millisecond
+	 */
 	public void setAnimationRightDuration(int duration) {
 		mAnimationLeftDuration = duration;
 	}
@@ -429,12 +576,30 @@ public class CustomSwipeListView extends ListView {
 		}
 	}
 
+	/**
+	 * Register a callback to be invoked when an item in this Listview has been
+	 * removed in {@link #TOUCH_SWIPE_RIGHT}.
+	 * 
+	 * @param removeItemCustomSwipeListener
+	 */
 	public void setRemoveItemCustomSwipeListener(
 			RemoveItemCustomSwipeListener removeItemCustomSwipeListener) {
 		mRemoveItemCustomSwipeListener = removeItemCustomSwipeListener;
 	}
 
+	/**
+	 * Interface definition for a callback to be invoked when an item in this
+	 * Listview has been removed in {@link #TOUCH_SWIPE_RIGHT}.
+	 */
 	public interface RemoveItemCustomSwipeListener {
+
+		/**
+		 * Callback method to be invoked when an item in this Listview has been
+		 * removed.
+		 * 
+		 * @param selectedPostion
+		 *            the position which has been removed.
+		 */
 		void onRemoveItemListener(int selectedPostion);
 	}
 }
