@@ -1,24 +1,153 @@
-Android-ListViewWithSwipe
-=========================================
+##Android-ListViewWithSwipe
+---
+Android-ListViewWithSwipe that inherited from Listview and BaseAdapter supports for swiping item from right or left .
+
+##Feature
+---
+>1.Support the custom menu in the menu which is been shown by scrolling item to left.
+
+>2.Support delete item from the listview by scrolling item to right.
+
+>3.Support undo the event that is deleting item .
+
+>4.Support set the animation execution time that is been executed by swiping item from right or left.
+
+>5.Support set the delta which determines whether to swipe item from right or left .
+
+>6.Support set the flag which determines whether to enable to swipe item from right or left .
+
+>7.Easy to integrate to your app.
+
+##ScreenShot
+---
+
+##Usage
+---
+ It is very similar to the normal use of the ListView and BaseAdapter.
+ 
+ Firstly,you need to inherite the CustomSwipeBaseAdapter for your own adapter. The CustomSwipeListview can use it directly.
+
+     public class TestActivity extends Activity {
+         private CustomSwipeListView mTestListView;
+         private TestAdapter mTestAdapter;
+     ... ...
+     }
+     
+     public class TestAdapter extends CustomSwipeBaseAdapter<TestModel> {
+     ... ...
+     }
+
+ Secondly, you need to implement some abstract function and interface that is in CustomSwipeListview and CustomSwipeBaseAdapter.
+```
+ //Bind an existing item view to the data pointed to by position.
+ @Override
+ public void bindItemView(View view, Context context, int position) {
+	    TextView textViewTitle = (TextView) view.findViewById(R.id.test_title);
+		   textViewTitle.setText(getAdapterData().get(position).getTestTitle());
+	... ...
+ }
+ 
+ //Bind an existing swipe left view to the data pointed to by position.
+ @Override
+ public void bindSwipeLeftView(View view, final Context context,final int position) {
+     Button buttonFb = (Button) view.findViewById(R.id.test_fb_btn);
+     buttonFb.setOnClickListener(new OnClickListener() {
+			  @Override
+			  public void onClick(View v) {
+				     Toast.makeText(context,	"...",Toast.LENGTH_SHORT).show();
+			  }
+		   });
+     ... ...
+ }
+ 
+ //Makes a new item view to hold the data pointed to by position.
+ @Override
+ public View newItemView(Context context, int position, ViewGroup parent) {
+		   final View mView = mLayout.inflate(R.layout.test_listview_item_view, parent, false);
+		   return mView;
+ }
+ 
+ //Makes a new swipe left view hold the data pointed to by position.
+ @Override
+ public View newSwipeLeftView(Context context, int position, ViewGroup parent) {
+		   final View mView = mLayout.inflate(R.layout.test_listview_swipe_view, parent, false);
+		   return mView;
+ }
+ ```
+ Then you can set some properties for what you want in the activity.
+ ```
+ public class TestActivity extends Activity implements RemoveItemCustomSwipeListener {
+     private CustomSwipeListView mTestListView;
+     private TestAdapter mTestAdapter;
+     ... ...
+     @Override
+     protected void onCreate(Bundle savedInstanceState) {
+        ... ...
+        //set remove item listener
+        mTestListView.setRemoveItemCustomSwipeListener(this);
+        //set whether enable to swipe
+        mTestListView.setSwipeItemLeftEnable(true);
+        mTestListView.setSwipeItemRightEnable(true);
+        //set animation execution time in millisecond
+        mTestListView.setAnimationLeftDuration(300);
+        mTestListView.setAnimationRightDuration(300);
+        //set deltaX that triggers swiping item in dip
+        mTestListView.setSwipeItemLeftTriggerDeltaX(50);
+        mTestListView.setSwipeItemRightTriggerDeltaX(50);
+        ... ...
+    }
+	    
+     @Override
+     public void onRemoveItemListener(int selectedPostion) {
+        TestModel model = mTestAdapter.removeItemByPosition(selectedPostion);
+        //set undoDialog message to show
+        mUndoDialog.setMessage("Delete" + model.getTestTitle() + ".").showUndoDialog();
+     }
+	... ...
+ }
+ ```
+ If you need to undo the deleting item,you just some steps.
+ ```
+  public class TestActivity extends Activity implements RemoveItemCustomSwipeListener {
+     private TestAdapter mTestAdapter;
+     private CustomSwipeUndoDialog mUndoDialog;
+     ... ...
+     @Override
+     protected void onCreate(Bundle savedInstanceState) {
+        ... ...
+        mTestAdapter = new TestAdapter(this, mTestModels);
+        //UndoDialog Constructor
+		      mUndoDialog = new CustomSwipeUndoDialog(this);
+		      //set UndoActionListener,the listener is been implemented in CustomSwipeBaseAdapter.
+		      mUndoDialog.setUndoActionListener(mTestAdapter);
+		      ... ...
+    }
+	... ...
+ }
+ ```
+ 
+ For more detatls,please see the demo.Thank you.
+ 
+##Warning
+---
+>1.You must ensure that add or set data to the adapter by using addAdapterData(...) and setAdapterData(...) in CustomSwipeBaseAdapter.
+ 
+>2.You must ensure that the height of the CustemListview is a certain value(like wrap_content is forbidden).
+ 
 ##TODO-LIST:
->1.~~修复第一次滑动时触法Iitem点击事件的bug~~
+---
+>1.添加左滑时菜单显示的过渡效果
 
->2.~~左滑距离动态化，以itemswipe的宽度为准~~
- 
->3.~~Listview中只允许出现一个swipe事件~~
- 
->4.~~规范代码，增加注释~~
- 
->5.添加左滑时菜单显示的过渡效果
- 
->6.~~添加右滑的删除接口~~
- 
->7.~~添加右滑的删除回退功能，并添加回退动画效果(不然不明显)~~
- 
->8.~~添加5.0的按钮点击效果(湖波纹状)~~功能取消
+##License
+---
+ Apache 2
 
->9.添加使用示范Demo
+##Contact or Help
+---
+Please contact me if there is any problem when using the library.
 
->10.~~增加自定义滑动时间~~
+Email: xyczero@sina.com
 
->11.~~左滑或右滑过程中再次触摸屏幕的处理(bug:滑动停止)~~
+Blog:  http://www.xyczero.com
+
+Wechat: xyczero
