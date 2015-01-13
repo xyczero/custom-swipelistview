@@ -1,9 +1,9 @@
 ##Android-ListViewWithSwipe
----
+
 Android-ListViewWithSwipe that inherited from Listview and BaseAdapter supports for swiping item from right or left .
 
 ##Feature
----
+
 >1.Support the custom menu in the menu which is been shown by scrolling item to left.
 
 >2.Support delete item from the listview by scrolling item to right.
@@ -19,26 +19,26 @@ Android-ListViewWithSwipe that inherited from Listview and BaseAdapter supports 
 >7.Easy to integrate to your app.
 
 ##ScreenShot
----
+
 
 ##Usage
----
+
  It is very similar to the normal use of the ListView and BaseAdapter.
  
  Firstly,you need to inherite the CustomSwipeBaseAdapter for your own adapter. The CustomSwipeListview can use it directly.
-
-     public class TestActivity extends Activity {
-         private CustomSwipeListView mTestListView;
-         private TestAdapter mTestAdapter;
-     ... ...
-     }
+```java
+ public class TestActivity extends Activity {
+    private CustomSwipeListView mTestListView;
+    private TestAdapter mTestAdapter;
+    ... ...
+ }
      
-     public class TestAdapter extends CustomSwipeBaseAdapter<TestModel> {
-     ... ...
-     }
-
- Secondly, you need to implement some abstract function and interface that is in CustomSwipeListview and CustomSwipeBaseAdapter.
+ public class TestAdapter extends CustomSwipeBaseAdapter<TestModel> {
+    ... ...
+ }
 ```
+ Secondly, you need to implement some abstract function and interface that is in CustomSwipeListview and CustomSwipeBaseAdapter.
+```java
  //Bind an existing item view to the data pointed to by position.
  @Override
  public void bindItemView(View view, Context context, int position) {
@@ -75,7 +75,7 @@ Android-ListViewWithSwipe that inherited from Listview and BaseAdapter supports 
  }
  ```
  Then you can set some properties for what you want in the activity.
- ```
+ ```java
  public class TestActivity extends Activity implements RemoveItemCustomSwipeListener {
      private CustomSwipeListView mTestListView;
      private TestAdapter mTestAdapter;
@@ -107,7 +107,7 @@ Android-ListViewWithSwipe that inherited from Listview and BaseAdapter supports 
  }
  ```
  If you need to undo the deleting item,you just some steps.
- ```
+ ```java
   public class TestActivity extends Activity implements RemoveItemCustomSwipeListener {
      private TestAdapter mTestAdapter;
      private CustomSwipeUndoDialog mUndoDialog;
@@ -129,21 +129,21 @@ Android-ListViewWithSwipe that inherited from Listview and BaseAdapter supports 
  For more detatls,please see the demo.Thank you.
  
 ##Warning
----
+
 >1.You must ensure that add or set data to the adapter by using addAdapterData(...) and setAdapterData(...) in CustomSwipeBaseAdapter.
  
 >2.You must ensure that the height of the CustemListview is a certain value(like wrap_content is forbidden).
  
 ##TODO-LIST:
----
+
 >1.添加左滑时菜单显示的过渡效果
 
 ##License
----
+
  Apache 2
 
 ##Contact or Help
----
+
 Please contact me if there is any problem when using the library.
 
 Email: xyczero@sina.com
