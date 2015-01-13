@@ -54,7 +54,7 @@ Android-ListViewWithSwipe that inherited from Listview and BaseAdapter supports 
      buttonFb.setOnClickListener(new OnClickListener() {
 			  @Override
 			  public void onClick(View v) {
-				     Toast.makeText(context,	"...",Toast.LENGTH_SHORT).show();
+				     Toast.makeText(context,"...",Toast.LENGTH_SHORT).show();
 			  }
 		   });
      ... ...
