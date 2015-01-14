@@ -20,6 +20,7 @@ Android-ListViewWithSwipe that inherited from Listview and BaseAdapter supports 
 
 ##ScreenShot
 
+![screenshot](http://7u2jsw.com1.z0.glb.clouddn.com/githubCustomSwipeListview_Set.PNG)
 
 ##Usage
 
@@ -134,15 +135,21 @@ Android-ListViewWithSwipe that inherited from Listview and BaseAdapter supports 
  
 >2.You must ensure that the height of the CustemListview is a certain value(like wrap_content is forbidden).
  
-##TODO-LIST:
+##Demo Download
 
->1.添加左滑时菜单显示的过渡效果
+[Download here](http://7u2jsw.com1.z0.glb.clouddn.com/githubCustomSwipeListView.apk)
+
+##Todo List
+
+>1.add transition effect when swping left the item
+
+>2.push to Maven and Gradle 
 
 ##License
 
  Apache 2
 
-##Contact or Help
+##Contact and Help
 
 Please contact me if there is any problem when using the library.
 
