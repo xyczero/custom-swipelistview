@@ -1,0 +1,39 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="@dimen/undo_dialog_height"
+    android:layout_marginBottom="@dimen/undo_dialog_layout_margin_bottom"
+    android:background="@drawable/customswipe_undodialog_shape"
+    android:orientation="horizontal"
+    android:alpha="0.9"
+    android:padding="@dimen/undo_dialog_padding" >
+
+    <TextView
+        android:id="@+id/undo_dialog_message"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="3"
+        android:textColor="@android:color/white"
+        android:textSize="@dimen/undo_dialog_textview_size" />
+
+    <ImageView
+        android:layout_width="1dp"
+        android:layout_height="match_parent"
+        android:layout_marginLeft="@dimen/undo_dialog_horizontal_line_margin"
+        android:layout_marginRight="@dimen/undo_dialog_horizontal_line_margin"
+        android:contentDescription=""
+        android:src="@android:color/white" />
+
+    <Button
+        android:id="@+id/undo_dialog_btn"
+        android:layout_width="0dp"
+        android:layout_height="match_parent"
+        android:layout_weight="1"
+        android:background="@android:color/transparent"
+        android:gravity="center"
+        android:drawableLeft="@drawable/ic_action_undo"
+        android:text="@string/undodialog_undo_action_str"
+        android:textColor="@android:color/white"
+        android:textSize="@dimen/undo_dialog_textview_size" />
+
+</LinearLayout>
