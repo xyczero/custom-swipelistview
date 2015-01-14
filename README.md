@@ -1,6 +1,6 @@
-##Android-ListViewWithSwipe
+##Android-CustomSwipeListView
 
-Android-ListViewWithSwipe that inherited from Listview and BaseAdapter supports for swiping item from right or left .
+Android-CustomSwipeListView that inherited from Listview and BaseAdapter supports for swiping item from right or left .
 
 ##Feature
 
