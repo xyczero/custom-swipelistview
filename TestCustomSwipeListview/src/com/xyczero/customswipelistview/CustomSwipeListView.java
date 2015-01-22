@@ -78,7 +78,9 @@ public class CustomSwipeListView extends ListView {
 
     private int mScreenWidth;
 
-    private int mTouchSlop;
+    private int mTouchSlopX;
+
+    private int mTouchSlopY;
 
     private VelocityTracker mVelocityTracker;
     private int mMinimumVelocity;
@@ -135,9 +137,14 @@ public class CustomSwipeListView extends ListView {
     private boolean isSwiping;
 
     /**
-     * Used to track the position that has been pointed to.
+     * Used to track the position that is pointed to.
      */
-    private int mSelectedPosition;
+    private int mCurSelectedPosition;
+
+    /**
+     * Used to track the position that was pointed to.
+     */
+    private int mLastSelectedPosition;
 
     /**
      * Used to track the X coordinate when the first finger down to.
@@ -196,7 +203,8 @@ public class CustomSwipeListView extends ListView {
         final Context context = getContext();
         final ViewConfiguration configuration = ViewConfiguration.get(context);
 
-        mTouchSlop = ViewConfiguration.get(context).getScaledTouchSlop() * 5;
+        mTouchSlopX = ViewConfiguration.get(context).getScaledTouchSlop();
+        mTouchSlopY = ViewConfiguration.get(context).getScaledTouchSlop() * 2;
         mMaximumVelocity = configuration.getScaledMaximumFlingVelocity();
         // set minimum velocity according to the MIN_VELOCITY.
         mMinimumVelocity = CustomSwipeUtils
@@ -207,7 +215,7 @@ public class CustomSwipeListView extends ListView {
 
         // set default value.
         mCurTouchSwipeMode = TOUCH_SWIPE_NONE;
-        mSelectedPosition = INVALID_POSITION;
+        mCurSelectedPosition = INVALID_POSITION;
     }
 
     private void initSwipeItemTriggerDeltaX() {
@@ -230,19 +238,17 @@ public class CustomSwipeListView extends ListView {
         case MotionEvent.ACTION_DOWN:
             mDownMotionX = ev.getX();
             mDownMotionY = ev.getY();
-            mSelectedPosition = INVALID_POSITION;
-            mSelectedPosition = pointToPosition((int) mDownMotionX,
+            mCurSelectedPosition = INVALID_POSITION;
+            mCurSelectedPosition = pointToPosition((int) mDownMotionX,
                     (int) mDownMotionY);
-            Log.d(TAG, "selectedPosition:" + mSelectedPosition);
-            // If responsing to down action before the scroll has been
-            // finished or in invalid position,it will lead to chaos of
-            // itemswipeview.
-            if (mSelectedPosition != INVALID_POSITION && mScroller.isFinished()) {
+            Log.d(TAG, "selectedPosition:" + mCurSelectedPosition);
+
+            if (mCurSelectedPosition != INVALID_POSITION) {
                 mCurItemMainView = getChildAt(
-                        mSelectedPosition - getFirstVisiblePosition())
+                        mCurSelectedPosition - getFirstVisiblePosition())
                         .findViewWithTag(ITEMMAIN_LAYOUT_TAG);
                 mCurItemSwipeView = getChildAt(
-                        mSelectedPosition - getFirstVisiblePosition())
+                        mCurSelectedPosition - getFirstVisiblePosition())
                         .findViewWithTag(ITEMSWIPE_LAYOUT_TAG);
                 isClickItemSwipeView = isInSwipePosition((int) mDownMotionX,
                         (int) mDownMotionY);
@@ -288,7 +294,7 @@ public class CustomSwipeListView extends ListView {
             return super.onTouchEvent(ev);
         }
 
-        if (mSelectedPosition != INVALID_POSITION) {
+        if (mCurSelectedPosition != INVALID_POSITION) {
             addVelocityTrackerMotionEvent(ev);
             switch (action) {
             case MotionEvent.ACTION_DOWN:
@@ -309,10 +315,22 @@ public class CustomSwipeListView extends ListView {
             case MotionEvent.ACTION_MOVE:
                 Log.d(TAG, "onTouchEvent:ACTION_MOVE");
                 mVelocityTracker.getYVelocity();
+                // This is a remedial action in case of the finger clicking down
+                // quickly again after TOUCH_SWIPE_LEFT.
+                // At that moment the mScroller may not finish so
+                // isItemSwipeViewVisible is still false when the finger clicks
+                // down.
+                if (isItemSwipeViewVisible) {
+                    if (!isClickItemSwipeView) {
+                        mLastItemSwipeView.setVisibility(GONE);
+                        mLastItemMainView.scrollTo(0, 0);
+                    }
+                    isItemSwipeViewVisible = false;
+                }
                 // determine whether the swipe action.
                 if (Math.abs(getScrollXVelocity()) > mMinimumVelocity
-                        || (Math.abs(ev.getX() - mDownMotionX) > mTouchSlop && Math
-                                .abs(ev.getY() - mDownMotionY) < mTouchSlop)) {
+                        || (Math.abs(ev.getX() - mDownMotionX) > mTouchSlopY && Math
+                                .abs(ev.getY() - mDownMotionY) < mTouchSlopY)) {
                     isSwiping = true;
                 }
                 if (isSwiping) {
@@ -323,16 +341,19 @@ public class CustomSwipeListView extends ListView {
                         mCurItemMainView.scrollBy(deltaX, 0);
                     }
                     // if super.onTouchEvent() that been called there,it might
-                    // lead to the specified item out of focus due to the
-                    // function might call itemClick function in the sliding.
+                    // lead to the specified item out of focus due to
+                    // it might call itemClick function in the sliding.
                     return true;
                 }
                 break;
             case MotionEvent.ACTION_UP:
                 Log.d(TAG, "onTouchEvent:ACTION_UP");
                 if (isSwiping) {
+                    // Record the old view and position
                     mLastItemMainView = mCurItemMainView;
                     mLastItemSwipeView = mCurItemSwipeView;
+                    mLastSelectedPosition = mCurSelectedPosition;
+
                     final int velocityX = getScrollXVelocity();
                     if (velocityX > mMinimumVelocity) {
                         scrollByTouchSwipeMode(TOUCH_SWIPE_RIGHT, -mScreenWidth);
@@ -367,7 +388,7 @@ public class CustomSwipeListView extends ListView {
 
     @Override
     public void computeScroll() {
-        if (isSwiping && mSelectedPosition != INVALID_POSITION) {
+        if (isSwiping && mLastSelectedPosition != INVALID_POSITION) {
             if (mScroller.computeScrollOffset()) {
                 mLastItemMainView.scrollTo(mScroller.getCurrX(),
                         mScroller.getCurrY());
@@ -386,13 +407,14 @@ public class CustomSwipeListView extends ListView {
                             throw new NullPointerException(
                                     "RemoveItemCustomSwipeListener is null, we should called setRemoveItemCustomSwipeListener()");
                         }
+                        // Callback
+                        mRemoveItemCustomSwipeListener
+                                .onRemoveItemListener(mLastSelectedPosition);
+
                         // Before the view in the selected position is
                         // deleted,it needs to return to original state because
                         // the next position will be setted in this position.
                         mLastItemMainView.scrollTo(0, 0);
-                        // Callback
-                        mRemoveItemCustomSwipeListener
-                                .onRemoveItemListener(mSelectedPosition);
                         break;
                     default:
                         break;
@@ -420,10 +442,12 @@ public class CustomSwipeListView extends ListView {
         }
         // The premise is that the itemswipeview is visible.
         if (isItemSwipeViewVisible) {
-            frame.set(mCurItemSwipeView.getLeft(),
-                    getChildAt(mSelectedPosition - getFirstVisiblePosition())
-                            .getTop(), mCurItemSwipeView.getRight(),
-                    getChildAt(mSelectedPosition - getFirstVisiblePosition())
+            frame.set(
+                    mCurItemSwipeView.getLeft(),
+                    getChildAt(mCurSelectedPosition - getFirstVisiblePosition())
+                            .getTop(),
+                    mCurItemSwipeView.getRight(),
+                    getChildAt(mCurSelectedPosition - getFirstVisiblePosition())
                             .getBottom());
             if (frame.contains(x, y)) {
                 return true;
