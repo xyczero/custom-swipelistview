@@ -78,7 +78,7 @@ public class CustomSwipeListView extends ListView {
 
 	private int mScreenWidth;
 
-	private int mTouchSlopX;
+	private int mTouchSlop;
 
 	private VelocityTracker mVelocityTracker;
 	private int mMinimumVelocity;
@@ -218,7 +218,7 @@ public class CustomSwipeListView extends ListView {
 		final Context context = getContext();
 		final ViewConfiguration configuration = ViewConfiguration.get(context);
 
-		mTouchSlopX = ViewConfiguration.get(context).getScaledTouchSlop();
+		mTouchSlop = ViewConfiguration.get(context).getScaledTouchSlop();
 		mMaximumVelocity = configuration.getScaledMaximumFlingVelocity();
 		// set minimum velocity according to the MIN_VELOCITY.
 		mMinimumVelocity = CustomSwipeUtils
@@ -349,10 +349,10 @@ public class CustomSwipeListView extends ListView {
 							+ Math.abs(ev.getX() - mDownMotionX);
 					mAccumAbsDeltaY = mAccumAbsDeltaY
 							+ Math.abs(ev.getY() - mDownMotionY);
-					if (mAccumAbsDeltaY >= mTouchSlopX) {
+					if (mAccumAbsDeltaY >= mTouchSlop) {
 						isSwiping = false;
 						mEnableJudgeSwiping = false;
-					} else if (mAccumAbsDeltaX >= mTouchSlopX) {
+					} else if (mAccumAbsDeltaX >= mTouchSlop) {
 						isSwiping = true;
 						mEnableJudgeSwiping = false;
 					}
