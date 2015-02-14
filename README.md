@@ -129,7 +129,7 @@ Android-CustomSwipeListView that inherited from Listview and BaseAdapter support
  
  For more detatls,please see the demo.Thank you.
  
-##Warning
+##Limitations
 
 >1.You must ensure that add or set data to the adapter by using addAdapterData(...) and setAdapterData(...) in CustomSwipeBaseAdapter.
  
