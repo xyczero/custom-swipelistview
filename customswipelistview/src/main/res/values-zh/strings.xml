@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <!-- undoDialog -->
+    <string name="undodialog_undo_action_str">撤销</string>
+
+</resources>

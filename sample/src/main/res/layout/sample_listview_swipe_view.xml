@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="70dp"
+    android:layout_height="70dp"
+    android:gravity="center_vertical" >
+
+    <Button
+        android:id="@+id/test_fb_btn"
+        android:layout_width="35dp"
+        android:layout_height="35dp"
+        android:background="@android:color/transparent"
+        android:drawableRight="@drawable/sample_fb"
+        android:gravity="right" />
+
+    <Button
+        android:id="@+id/test_mail_btn"
+        android:layout_width="35dp"
+        android:layout_height="35dp"
+        android:layout_toRightOf="@id/test_fb_btn"
+        android:background="@android:color/transparent"
+        android:drawableRight="@drawable/sample_mail"
+        android:gravity="left" />
+
+</RelativeLayout>

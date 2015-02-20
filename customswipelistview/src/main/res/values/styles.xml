@@ -1,0 +1,26 @@
+<resources>
+
+    <!-- Base application theme. -->
+    <style name="AppTheme" parent="android:Theme.Light">
+        <!-- Customize your theme here. -->
+    </style>
+
+    <!-- Common Dialog Style-->
+    <style name="CommonDialog" parent="@android:style/Theme.Holo.Light.Dialog.NoActionBar">
+        <item name="android:windowFrame">@null</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:windowIsFloating">true</item>
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <!-- 背景透明 -->
+        <item name="android:windowContentOverlay">@null</item>
+        <!-- 去掉背景阴影 -->
+        <item name="android:backgroundDimEnabled">false</item>
+    </style>
+
+    <!-- Common Dialog Animation-->
+    <style name="dialog_inout_anim" parent="android:Animation">
+        <item name="@android:windowEnterAnimation">@anim/undodialog_enter</item>
+        <item name="@android:windowExitAnimation">@anim/undodialog_exit</item>
+    </style>
+
+</resources>
