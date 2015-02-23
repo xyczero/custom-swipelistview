@@ -21,6 +21,9 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
+    lintOptions {
+        abortOnError false
+    }
 }
 
 def siteUrl = "https://github.com/xyczero/custom-swipelistview"
