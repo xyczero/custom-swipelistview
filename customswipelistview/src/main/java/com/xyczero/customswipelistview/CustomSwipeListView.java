@@ -305,6 +305,14 @@ public class CustomSwipeListView extends ListView {
             return super.onTouchEvent(ev);
         }
 
+        //if the next action_move is coming after the second action_down
+        //when the ItemSwipeView is still swiping with the first action,
+        //it will not allow the following actions until the ItemSwipeView has finished the swiping.
+        if (mEnableJudgeSwiping && isSwiping) {
+            ev.setAction(MotionEvent.ACTION_CANCEL);
+            return super.onTouchEvent(ev);
+        }
+
         if (mCurSelectedPosition != INVALID_POSITION) {
             addVelocityTrackerMotionEvent(ev);
             switch (action) {
@@ -419,6 +427,9 @@ public class CustomSwipeListView extends ListView {
                         mScroller.getCurrY());
                 postInvalidate();
 
+                //when triggering the action_down,AbListview will call the abortAnimation function.
+                //Then the mFinished will be true;
+                //Other one, the computeScroll is callback by onDraw().
                 if (mScroller.isFinished()) {
                     isSwiping = false;
                     switch (mCurTouchSwipeMode) {
@@ -608,10 +619,10 @@ public class CustomSwipeListView extends ListView {
         switch (touchMode) {
             case TOUCH_SWIPE_RIGHT:
                 mSwipeItemRightTriggerDeltaX = pxDeltaX <= mScreenWidth ? -pxDeltaX
-                        : mScreenWidth;
+                        : -mScreenWidth;
                 break;
             case TOUCH_SWIPE_LEFT:
-                mSwipeItemRightTriggerDeltaX = pxDeltaX <= mScreenWidth ? pxDeltaX
+                mSwipeItemLeftTriggerDeltaX = pxDeltaX <= mScreenWidth ? pxDeltaX
                         : mScreenWidth;
                 break;
             default:
