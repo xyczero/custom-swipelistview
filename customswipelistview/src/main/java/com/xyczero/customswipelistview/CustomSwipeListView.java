@@ -475,13 +475,13 @@ public class CustomSwipeListView extends ListView {
             frame = mTouchFrame;
         }
         // The premise is that the itemswipeview is visible.
-        if (isItemSwipeViewVisible && mCurItemSwipeView == mLastItemSwipeView) {
+        if (isItemSwipeViewVisible) {
             frame.set(
-                    mCurItemSwipeView.getLeft(),
-                    getChildAt(mCurSelectedPosition - getFirstVisiblePosition())
+                    mLastItemSwipeView.getLeft(),
+                    getChildAt(mLastSelectedPosition - getFirstVisiblePosition())
                             .getTop(),
-                    mCurItemSwipeView.getRight(),
-                    getChildAt(mCurSelectedPosition - getFirstVisiblePosition())
+                    mLastItemSwipeView.getRight(),
+                    getChildAt(mLastSelectedPosition - getFirstVisiblePosition())
                             .getBottom());
             if (frame.contains(x, y)) {
                 return true;

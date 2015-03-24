@@ -20,7 +20,6 @@ import android.content.Context;
 import android.view.Gravity;
 import android.view.View;
 import android.view.ViewGroup;
-import android.view.ViewGroup.LayoutParams;
 import android.view.animation.AnimationUtils;
 import android.widget.AbsListView;
 import android.widget.BaseAdapter;
@@ -221,7 +220,7 @@ public abstract class CustomSwipeBaseAdapter<T> extends BaseAdapter implements
         // itemLayout indicates the outermost layout of the new view.
         RelativeLayout itemLayout = new RelativeLayout(context);
         itemLayout.setLayoutParams(new AbsListView.LayoutParams(
-                LayoutParams.MATCH_PARENT, itemView.getLayoutParams().height));
+                itemView.getLayoutParams().width, itemView.getLayoutParams().height));
         itemLayout.addView(itemView);
 
         // get a new swipeLeftView and init it.
@@ -236,7 +235,7 @@ public abstract class CustomSwipeBaseAdapter<T> extends BaseAdapter implements
         // itemSwipeLeftLayout indicates the layout of the swipeLeftView.
         RelativeLayout itemSwipeLeftLayout = new RelativeLayout(context);
         itemSwipeLeftLayout.setLayoutParams(new AbsListView.LayoutParams(
-                LayoutParams.MATCH_PARENT, itemView.getLayoutParams().height));
+                itemView.getLayoutParams().width, itemView.getLayoutParams().height));
         itemSwipeLeftLayout.setHorizontalGravity(Gravity.END);
         itemSwipeLeftLayout.setBackgroundColor(mContext.getResources()
                 .getColor(android.R.color.transparent));
