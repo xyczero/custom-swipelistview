@@ -20,14 +20,14 @@ Android-CustomSwipeListView that inherited from Listview and BaseAdapter support
 
 ##Gradle Dependency
 ```
-compile 'com.xyczero:customswipelistview:1.0.0@aar'
+compile 'com.xyczero:customswipelistview:1.0.1@aar'
 ```
 ##Maven Dependency
 ```
 <dependency>
     <groupId>com.xyczero</groupId>
     <artifactId>customswipelistview</artifactId>
-    <version>1.0.0</version>
+    <version>1.0.1</version>
     <type>aar</type>
 </dependency>
 ```
@@ -157,6 +157,9 @@ compile 'com.xyczero:customswipelistview:1.0.0@aar'
 >1.add transition effect when swping left the item
 
 >~~2.push to Maven and Gradle~~
+
+>3.refactor the CustomSwipeBaseAdapter.class for more effective
+
 
 ##License
 
